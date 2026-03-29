@@ -8,7 +8,657 @@
 <meta name="theme-color" content="#f0f2f7">
 <title>資産管理</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資産管理">
+<meta name="theme-color" content="#f0f2f7">
+<title>資産管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
+:root{--bg:#f0f2f7;--card:#fff;--card2:#f8f9fc;--border:#e4e7f0;--text:#0f1320;--sub:#6b7280;--accent:#2563eb;--green:#059669;--red:#dc2626;--gold:#d97706;--shadow:0 2px 16px rgba(15,19,32,.08);--r:20px;--rs:12px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overscroll-behavior:none}
+.app{max-width:430px;margin:0 auto;padding-bottom:90px}
+.header{background:var(--card);padding:52px 20px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between}
+.hdr-label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.8px}
+.hdr-total{font-size:30px;font-weight:900;font-family:'DM Mono';margin-top:2px}
+.hdr-right{text-align:right}
+.hdr-date{font-size:11px;color:var(--sub);font-family:'DM Mono'}
+.hdr-gain{font-family:'DM Mono';font-size:12px;margin-top:3px}
+.reset-link{font-size:10px;color:var(--sub);text-decoration:underline;cursor:pointer;margin-top:3px;display:block}
+.pos{color:var(--green)} .neg{color:var(--red)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;min-width:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 8px;cursor:pointer;color:var(--sub);font-size:10px;gap:3px;transition:color .15s;user-select:none}
+.nav-btn.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.panel{display:none;padding:16px;animation:fu .2s ease both}
+.panel.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.card-title{font-size:13px;font-weight:700}
+.card-body{padding:18px}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.chip{background:var(--card);border-radius:var(--rs);padding:14px 16px;box-shadow:var(--shadow)}
+.chip-label{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.chip-val{font-size:19px;font-weight:800;font-family:'DM Mono'}
+.chip-sub{font-size:10px;margin-top:3px;font-family:'DM Mono'}
+.chart-wrap{position:relative;width:200px;height:200px;margin:0 auto 20px}
+.chart-wrap canvas{position:absolute;inset:0}
+.chart-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.chart-cv{font-size:17px;font-weight:800;font-family:'DM Mono'}
+.chart-cs{font-size:10px;color:var(--sub)}
+.legend{list-style:none}
+.leg-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.leg-item:last-child{border-bottom:none}
+.leg-left{display:flex;align-items:center;gap:9px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.leg-name{font-size:13px;font-weight:500}
+.leg-right{display:flex;align-items:center;gap:8px}
+.leg-val{font-family:'DM Mono';font-size:12px;color:var(--sub)}
+.leg-pct{font-family:'DM Mono';font-size:12px;font-weight:700}
+.item-list{list-style:none}
+.item-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.item-row:last-child{border-bottom:none}
+.item-row:active{opacity:.7}
+.item-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.item-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.item-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.item-right{text-align:right;flex-shrink:0}
+.item-val{font-family:'DM Mono';font-size:14px;font-weight:700}
+.item-gain{font-family:'DM Mono';font-size:11px;margin-top:2px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0 0;border-top:2px solid var(--border)}
+.total-lbl{font-size:13px;font-weight:700}
+.total-val{font-family:'DM Mono';font-size:14px;font-weight:800;color:var(--accent)}
+.sec-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin:18px 0 8px}
+.alert{padding:12px 16px;border-radius:var(--rs);margin-bottom:14px;font-size:12px;display:flex;gap:8px}
+.alert-warn{background:#fffbeb;color:var(--gold);border:1px solid #fcd34d}
+.fab{position:fixed;bottom:90px;right:calc(50% - 215px + 16px);width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border:none;z-index:40;transition:transform .15s}
+.fab:active{transform:scale(.93)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:var(--card);border-radius:24px 24px 0 0;transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.overlay.open .sheet{transform:translateX(-50%) translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.sheet-title{font-size:16px;font-weight:800;padding:16px 20px 12px;border-bottom:1px solid var(--border)}
+.sheet-body{padding:20px}
+.sheet-actions{display:flex;gap:10px;padding:0 20px 20px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block;font-weight:500}
+.form-input,.form-select{width:100%;padding:13px 16px;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:15px;font-family:'Noto Sans JP';outline:none;transition:border-color .15s;-webkit-appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{flex:1;padding:15px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;font-family:'Noto Sans JP';cursor:pointer}
+.btn-p{background:var(--accent);color:#fff}
+.btn-s{background:var(--card2);color:var(--sub)}
+.type-tabs{display:flex;gap:8px;margin-bottom:20px}
+.type-tab{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;border:1.5px solid var(--border);color:var(--sub)}
+.type-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.del-btn{background:#fef2f2;color:var(--red);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-label">総資産</div>
+        <div class="hdr-total" id="hdr-total">—</div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-date" id="hdr-date"></div>
+        <div class="hdr-gain" id="hdr-gain"></div>
+        <span class="reset-link" onclick="resetDB()">リセット</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel active" id="panel-home">
+    <div class="stat-row" id="home-stats"></div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">📌 資産アロケーション</div></div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="pie-alloc" width="200" height="200"></canvas>
+          <div class="chart-center"><div class="chart-cv" id="pie-alloc-c"></div><div class="chart-cs">合計</div></div>
+        </div>
+        <ul class="legend" id="leg-alloc"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🌍 全資産 地域別内訳</div></div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="pie-combined" width="200" height="200"></canvas>
+          <div class="chart-center"><div class="chart-cv" id="pie-combined-c"></div><div class="chart-cs">全資産合計</div></div>
+        </div>
+        <ul class="legend" id="leg-combined"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-alloc">
+    <div class="sec-label">カテゴリ別資産</div>
+    <div class="card"><div class="card-body" style="padding:0 18px"><ul class="item-list" id="list-alloc"></ul></div></div>
+  </div>
+
+  <div class="panel" id="panel-funds">
+    <div class="alert alert-warn">⚠️ 損益はアプリの表示値を入力してください</div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🌏 地域別</div></div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="pie-funds" width="200" height="200"></canvas>
+          <div class="chart-center"><div class="chart-cv" id="pie-funds-c"></div><div class="chart-cs">楽天投信</div></div>
+        </div>
+        <ul class="legend" id="leg-funds"></ul>
+      </div>
+    </div>
+    <div class="sec-label">投資信託（楽天証券）</div>
+    <div class="card"><div class="card-body" style="padding:0 18px"><ul class="item-list" id="list-funds"></ul></div></div>
+  </div>
+
+  <div class="panel" id="panel-sbi">
+    <div class="alert alert-warn">⚠️ 損益はSBI証券アプリの表示値を使用しています</div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🏦 地域別</div></div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="pie-sbi" width="200" height="200"></canvas>
+          <div class="chart-center"><div class="chart-cv" id="pie-sbi-c"></div><div class="chart-cs">SBI</div></div>
+        </div>
+        <ul class="legend" id="leg-sbi"></ul>
+      </div>
+    </div>
+    <div class="sec-label">SBI証券 保有一覧</div>
+    <div class="card"><div class="card-body" style="padding:0 18px"><ul class="item-list" id="list-sbi"></ul></div></div>
+  </div>
+</div>
+
+<button class="fab" onclick="openSheet(null,null)">＋</button>
+
+<div class="bottom-nav">
+  <div class="nav-btn active" id="nav-home" onclick="showPanel('home')"><div class="nav-icon">🏠</div><div>ホーム</div></div>
+  <div class="nav-btn" id="nav-alloc" onclick="showPanel('alloc')"><div class="nav-icon">💰</div><div>資産</div></div>
+  <div class="nav-btn" id="nav-funds" onclick="showPanel('funds')"><div class="nav-icon">📈</div><div>楽天</div></div>
+  <div class="nav-btn" id="nav-sbi" onclick="showPanel('sbi')"><div class="nav-icon">🏦</div><div>SBI</div></div>
+</div>
+
+<div class="overlay" id="overlay" onclick="onBgClick(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-title">データを追加</div>
+    <div class="sheet-body" id="sheet-body"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-s" onclick="closeSheet()">キャンセル</button>
+      <button class="btn btn-p" onclick="saveItem()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────
+var ICONS = {'証券口座':'📊','現金':'💴','持株':'🏢','暗号資産':'🪙','その他':'📦'};
+var RICONS = {'米国':'🇺🇸','全世界':'🌏','日本':'🇯🇵','新興国':'🌱','貴金属':'🥇','欧州':'🇪🇺','現金':'💴'};
+var COLORS = {
+  '証券口座':'#3b82f6','現金':'#8b5cf6','持株':'#22c55e','暗号資産':'#a855f7','その他':'#6b7280',
+  '米国':'#ef4444','全世界':'#3b82f6','日本':'#10b981','新興国':'#f59e0b','貴金属':'#eab308','欧州':'#6366f1'
+};
+var ALLOC_COLORS = ['#3b82f6','#06b6d4','#8b5cf6','#22c55e','#a855f7'];
+function cc(c) { return COLORS[c] || '#6b7280'; }
+function fmtMan(v) { return '\u00a5' + (Math.abs(v)/10000).toFixed(1) + '\u4e07'; }
+function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
+// ─── DEFAULT DATA ─────────────────────────
+var DEFAULT = {
+  allocation: [
+    {id:1, name:'楽天証券', cat:'証券口座', value:7988714},
+    {id:2, name:'SBI証券',  cat:'証券口座', value:4287824},
+    {id:3, name:'現金',     cat:'現金',     value:4200000},
+    {id:4, name:'自社持株', cat:'持株',     value:4000000},
+    {id:5, name:'暗号資産', cat:'暗号資産', value:600000}
+  ],
+  funds: [
+    {id:1,  name:'楽天・プラス・オールカントリー', region:'全世界', value:1375714, gain:185715,  pct:15.68},
+    {id:2,  name:'iFreeNEXT FANG+インデックス',    region:'米国',   value:1300000, gain:60702,   pct:4.86},
+    {id:3,  name:'eMAXIS Slim 米国株式(S&P500)',   region:'米国',   value:990000,  gain:113000,  pct:12.95},
+    {id:4,  name:'eMAXIS Slim 新興国株式',         region:'新興国', value:800000,  gain:216000,  pct:37.0},
+    {id:5,  name:'eMAXIS Slim 国内株式(TOPIX)',    region:'日本',   value:630000,  gain:82000,   pct:14.75},
+    {id:6,  name:'ピクテ・バイオ医薬品ファンド',   region:'米国',   value:510000,  gain:2500,    pct:0.49},
+    {id:7,  name:'ステート・ストリートGold',       region:'貴金属', value:480000,  gain:-23000,  pct:-4.68},
+    {id:8,  name:'インベスコ 世界厳選株式',        region:'全世界', value:790000,  gain:-41500,  pct:-5.02},
+    {id:9,  name:'My SMT ラッセル2000',            region:'米国',   value:180000,  gain:1100,    pct:0.62},
+    {id:10, name:'iTrust 新興国株式',              region:'新興国', value:130000,  gain:13,      pct:0.01},
+    {id:11, name:'WCM 世界成長株',                region:'全世界', value:290000,  gain:-6600,   pct:-2.2},
+    {id:12, name:'NTT',                           region:'日本',   value:190000,  gain:-14500,  pct:-7.08},
+    {id:13, name:'楽天グループ',                  region:'日本',   value:75000,   gain:-20000,  pct:-21.28},
+    {id:14, name:'ソフトバンク',                  region:'日本',   value:66000,   gain:8800,    pct:16.22},
+    {id:15, name:'ispace',                        region:'日本',   value:57000,   gain:-15000,  pct:-20.83},
+    {id:16, name:'ノーザントラスト米ドルMMF',      region:'現金',   value:125000,  gain:1100,    pct:0.89}
+  ],
+  sbi: [
+    {id:1,  name:'三菱UFJ 純金ETF(1540)',      region:'貴金属', value:278720,  gain:82120,   pct:41.89},
+    {id:2,  name:'三菱UFJ 純銀ETF(1542)',      region:'貴金属', value:345400,  gain:156300,  pct:81.92},
+    {id:3,  name:'iFree 日本配当ローテ',       region:'日本',   value:239100,  gain:31200,   pct:15.34},
+    {id:4,  name:'SBI iシェアーズ・ゴールド',  region:'貴金属', value:763843,  gain:-3315,   pct:-0.41},
+    {id:5,  name:'SBI 日本高配当株式',         region:'日本',   value:615627,  gain:107000,  pct:21.14},
+    {id:6,  name:'SBI 欧州高配当株式',         region:'欧州',   value:567171,  gain:52000,   pct:10.34},
+    {id:7,  name:'SBI ネクスト・フロンティア', region:'新興国', value:594089,  gain:75000,   pct:14.62},
+    {id:8,  name:'SBI 次世代テクノロジー',     region:'米国',   value:168360,  gain:-28733,  pct:-15.83},
+    {id:9,  name:'eMAXIS Slim 全世界株式(AC)', region:'全世界', value:298966,  gain:-11252,  pct:-3.56},
+    {id:10, name:'iFreeNEXT NASDAQ100',        region:'米国',   value:416548,  gain:11816,   pct:1.60}
+  ],
+  nextId: {a:6, f:17, s:11}
+};
+
+// ─── DB ──────────────────────────────────
+var KEY = 'portfolio_v7';
+var db = JSON.parse(JSON.stringify(DEFAULT));
+
+function saveDB() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e) {}
+}
+function loadDB() {
+  try {
+    var old = ['portfolio_db_v1','portfolio_db_v2','portfolio_db_v3','portfolio_db_v4','portfolio_v5','portfolio_v6'];
+    for (var i = 0; i < old.length; i++) { localStorage.removeItem(old[i]); }
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var s = JSON.parse(raw);
+    if (s.allocation && s.allocation.length > 0) db.allocation = s.allocation;
+    if (s.funds      && s.funds.length      > 0) db.funds      = s.funds;
+    if (s.sbi        && s.sbi.length        > 0) db.sbi        = s.sbi;
+    if (s.nextId) db.nextId = s.nextId;
+  } catch(e) {}
+}
+function resetDB() {
+  if (!confirm('全データをリセットしますか？')) return;
+  localStorage.removeItem(KEY);
+  db = JSON.parse(JSON.stringify(DEFAULT));
+  renderAll();
+}
+
+// ─── DONUT CHART ─────────────────────────
+function drawDonut(canvasId, labels, values, colors, centerId) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var cx = W/2, cy = H/2, r = W/2 - 8, ir = r * 0.58;
+  var total = 0;
+  for (var i = 0; i < values.length; i++) total += values[i];
+  ctx.clearRect(0, 0, W, H);
+  var angle = -Math.PI / 2;
+  for (var i = 0; i < values.length; i++) {
+    var slice = values[i] / total * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[i]; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+    if (slice > 0.2) {
+      var mid = angle + slice / 2;
+      var lx = cx + r * 0.72 * Math.cos(mid);
+      var ly = cy + r * 0.72 * Math.sin(mid);
+      ctx.fillStyle = 'rgba(255,255,255,.92)';
+      ctx.font = 'bold 11px DM Mono, monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((values[i]/total*100).toFixed(0)+'%', lx, ly);
+    }
+    angle += slice;
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, ir, 0, Math.PI*2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  var cel = document.getElementById(centerId);
+  if (cel) cel.textContent = '\u00a5' + (total/10000).toFixed(0) + '\u4e07';
+}
+
+// ─── BUILD LIST HTML ─────────────────────
+function buildItemRow(item, onClickFn) {
+  var gainHtml = '';
+  if (item.gain !== undefined) {
+    var cls = item.gain >= 0 ? 'pos' : 'neg';
+    var sign = item.gain >= 0 ? '+' : '';
+    gainHtml = '<div class="item-gain ' + cls + '">' + sign + fmtMan(item.gain) + ' (' + fmtPct(item.pct) + ')</div>';
+  }
+  return '<li class="item-row" onclick="' + onClickFn + '(' + item.id + ')">'
+    + '<div class="item-left">'
+      + '<div class="item-icon" style="background:' + item.iconBg + '">' + item.icon + '</div>'
+      + '<div style="min-width:0">'
+        + '<div class="item-name">' + item.name + '</div>'
+        + '<div style="margin-top:3px">'
+          + '<span class="badge" style="background:' + item.badgeColor + '22;color:' + item.badgeColor + '">' + item.badge + '</span>'
+        + '</div>'
+      + '</div>'
+    + '</div>'
+    + '<div class="item-right">'
+      + '<div class="item-val">' + fmtMan(item.val) + '</div>'
+      + gainHtml
+    + '</div>'
+    + '</li>';
+}
+
+function buildTotalRow(total, totalGain) {
+  var gainHtml = '';
+  if (totalGain !== 0) {
+    var cls = totalGain >= 0 ? 'pos' : 'neg';
+    var sign = totalGain >= 0 ? '+' : '';
+    gainHtml = '<div style="font-family:\'DM Mono\',monospace;font-size:12px" class="' + cls + '">'
+      + sign + fmtMan(totalGain) + '</div>';
+  }
+  return '<li class="total-row">'
+    + '<span class="total-lbl">合計</span>'
+    + '<div style="text-align:right">'
+      + '<div class="total-val">\u00a5' + (total/10000).toFixed(0) + '\u4e07</div>'
+      + gainHtml
+    + '</div>'
+    + '</li>';
+}
+
+function renderItemList(listId, rows, onClickFn) {
+  var el = document.getElementById(listId);
+  if (!el) return;
+  rows.sort(function(a,b){ return b.val - a.val; });
+  var total = 0, totalGain = 0;
+  for (var i = 0; i < rows.length; i++) {
+    total += rows[i].val;
+    totalGain += rows[i].gain || 0;
+  }
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    html += buildItemRow(rows[i], onClickFn);
+  }
+  html += buildTotalRow(total, totalGain);
+  el.innerHTML = html;
+}
+
+// ─── RENDER ──────────────────────────────
+function renderHeader() {
+  var total = 0;
+  for (var i = 0; i < db.allocation.length; i++) total += db.allocation[i].value;
+  var gain = 0;
+  for (var i = 0; i < db.funds.length; i++) gain += db.funds[i].gain;
+  for (var i = 0; i < db.sbi.length; i++)   gain += db.sbi[i].gain;
+  document.getElementById('hdr-total').textContent = '\u00a5' + (total/10000).toFixed(0) + '\u4e07';
+  var now = new Date();
+  document.getElementById('hdr-date').textContent =
+    now.getFullYear() + '.' +
+    String(now.getMonth()+1).padStart(2,'0') + '.' +
+    String(now.getDate()).padStart(2,'0') + ' 更新';
+  var hg = document.getElementById('hdr-gain');
+  hg.textContent = (gain>=0?'+':'') + fmtMan(gain) + ' 含み損益';
+  hg.className = 'hdr-gain ' + (gain >= 0 ? 'pos' : 'neg');
+}
+
+function renderHome() {
+  // Stats chips
+  var fTotal = 0, fGain = 0, sTotal = 0, sGain = 0;
+  for (var i = 0; i < db.funds.length; i++) { fTotal += db.funds[i].value; fGain += db.funds[i].gain; }
+  for (var i = 0; i < db.sbi.length;   i++) { sTotal += db.sbi[i].value;   sGain += db.sbi[i].gain; }
+  var fCls = fGain >= 0 ? 'pos' : 'neg';
+  var sCls = sGain >= 0 ? 'pos' : 'neg';
+  document.getElementById('home-stats').innerHTML =
+    '<div class="chip">'
+      + '<div class="chip-label">楽天投信合計</div>'
+      + '<div class="chip-val">' + fmtMan(fTotal) + '</div>'
+      + '<div class="chip-sub ' + fCls + '">' + (fGain>=0?'+':'') + fmtMan(fGain) + '</div>'
+    + '</div>'
+    + '<div class="chip">'
+      + '<div class="chip-label">SBI合計</div>'
+      + '<div class="chip-val">' + fmtMan(sTotal) + '</div>'
+      + '<div class="chip-sub ' + sCls + '">' + (sGain>=0?'+':'') + fmtMan(sGain) + '</div>'
+    + '</div>';
+
+  // Alloc donut
+  var allocTotal = 0;
+  for (var i = 0; i < db.allocation.length; i++) allocTotal += db.allocation[i].value;
+  var aNames = [], aVals = [];
+  for (var i = 0; i < db.allocation.length; i++) { aNames.push(db.allocation[i].name); aVals.push(db.allocation[i].value); }
+  drawDonut('pie-alloc', aNames, aVals, ALLOC_COLORS, 'pie-alloc-c');
+  var legAlloc = '';
+  for (var i = 0; i < db.allocation.length; i++) {
+    var a = db.allocation[i], col = ALLOC_COLORS[i];
+    legAlloc += '<li class="leg-item">'
+      + '<div class="leg-left"><div class="dot" style="background:' + col + '"></div><span class="leg-name">' + a.name + '</span></div>'
+      + '<div class="leg-right"><span class="leg-val">' + fmtMan(a.value) + '</span><span class="leg-pct" style="color:' + col + '">' + (a.value/allocTotal*100).toFixed(1) + '%</span></div>'
+      + '</li>';
+  }
+  document.getElementById('leg-alloc').innerHTML = legAlloc;
+
+}
+
+function renderRegionDonut(data, total, pieId, centerId, legId) {
+  var regions = {};
+  for (var i = 0; i < data.length; i++) {
+    var r = data[i].region;
+    regions[r] = (regions[r] || 0) + data[i].value;
+  }
+  var keys = Object.keys(regions).sort(function(a,b){ return regions[b]-regions[a]; });
+  var vals = [], cols = [];
+  for (var i = 0; i < keys.length; i++) { vals.push(regions[keys[i]]); cols.push(cc(keys[i])); }
+  drawDonut(pieId, keys, vals, cols, centerId);
+  var leg = '';
+  for (var i = 0; i < keys.length; i++) {
+    var icon = RICONS[keys[i]] || '';
+    leg += '<li class="leg-item">'
+      + '<div class="leg-left"><div class="dot" style="background:' + cols[i] + '"></div><span class="leg-name">' + icon + ' ' + keys[i] + '</span></div>'
+      + '<div class="leg-right"><span class="leg-val">' + fmtMan(vals[i]) + '</span><span class="leg-pct" style="color:' + cols[i] + '">' + (vals[i]/total*100).toFixed(1) + '%</span></div>'
+      + '</li>';
+  }
+  document.getElementById(legId).innerHTML = leg;
+}
+
+function renderCombined() {
+  // 投信・SBIの地域別合算
+  var allFunds = db.funds.concat(db.sbi);
+  var regions = {};
+  for (var i = 0; i < allFunds.length; i++) {
+    var r = allFunds[i].region;
+    regions[r] = (regions[r] || 0) + allFunds[i].value;
+  }
+  // アロケーション（現金・自社持株・暗号資産）を追加
+  // 証券口座は投信・SBIで既にカウント済みのため除外
+  var allocMap = {'現金':0, '持株':0, '暗号資産':0};
+  for (var i = 0; i < db.allocation.length; i++) {
+    var a = db.allocation[i];
+    if (a.cat === '現金')     allocMap['現金']     += a.value;
+    if (a.cat === '持株')     allocMap['持株']     += a.value;
+    if (a.cat === '暗号資産') allocMap['暗号資産'] += a.value;
+  }
+  if (allocMap['現金']     > 0) regions['現金']     = (regions['現金']     || 0) + allocMap['現金'];
+  if (allocMap['持株']     > 0) regions['持株']     = (regions['持株']     || 0) + allocMap['持株'];
+  if (allocMap['暗号資産'] > 0) regions['暗号資産'] = (regions['暗号資産'] || 0) + allocMap['暗号資産'];
+
+  var total = 0;
+  var keys = Object.keys(regions).sort(function(a,b){ return regions[b]-regions[a]; });
+  for (var i = 0; i < keys.length; i++) total += regions[keys[i]];
+
+  var vals = [], cols = [];
+  var extraColors = {'現金':'#8b5cf6','持株':'#22c55e','暗号資産':'#a855f7'};
+  for (var i = 0; i < keys.length; i++) {
+    vals.push(regions[keys[i]]);
+    cols.push(extraColors[keys[i]] || cc(keys[i]));
+  }
+  drawDonut('pie-combined', keys, vals, cols, 'pie-combined-c');
+  var leg = '';
+  for (var i = 0; i < keys.length; i++) {
+    var icon = RICONS[keys[i]] || (keys[i]==='持株'?'🏢': keys[i]==='暗号資産'?'🪙':'');
+    var pct = (vals[i]/total*100).toFixed(1);
+    leg += '<li class="leg-item">'
+      + '<div class="leg-left"><div class="dot" style="background:' + cols[i] + '"></div><span class="leg-name">' + icon + ' ' + keys[i] + '</span></div>'
+      + '<div class="leg-right"><span class="leg-val">' + fmtMan(vals[i]) + '</span><span class="leg-pct" style="color:' + cols[i] + '">' + pct + '%</span></div>'
+      + '</li>';
+  }
+  document.getElementById('leg-combined').innerHTML = leg;
+  // センターテキストを総資産に更新
+  var cel = document.getElementById('pie-combined-c');
+  if (cel) cel.textContent = '¥' + (total/10000).toFixed(0) + '万';
+}
+
+function renderAlloc() {
+  var rows = [];
+  for (var i = 0; i < db.allocation.length; i++) {
+    var a = db.allocation[i], col = ALLOC_COLORS[i] || '#6b7280';
+    rows.push({id:a.id, icon:ICONS[a.cat]||'📦', iconBg:col+'22', name:a.name, badge:a.cat, badgeColor:col, val:a.value});
+  }
+  renderItemList('list-alloc', rows, 'editAlloc');
+}
+
+function renderFunds() {
+  var fTotal = 0;
+  for (var i = 0; i < db.funds.length; i++) fTotal += db.funds[i].value;
+  renderRegionDonut(db.funds, fTotal, 'pie-funds', 'pie-funds-c', 'leg-funds');
+  var rows = [];
+  for (var i = 0; i < db.funds.length; i++) {
+    var f = db.funds[i], col = cc(f.region);
+    rows.push({id:f.id, icon:RICONS[f.region]||'🌐', iconBg:col+'22', name:f.name, badge:f.region, badgeColor:col, val:f.value, gain:f.gain, pct:f.pct});
+  }
+  renderItemList('list-funds', rows, 'editFund');
+}
+
+function renderSBI() {
+  var sTotal = 0;
+  for (var i = 0; i < db.sbi.length; i++) sTotal += db.sbi[i].value;
+  renderRegionDonut(db.sbi, sTotal, 'pie-sbi', 'pie-sbi-c', 'leg-sbi');
+  var rows = [];
+  for (var i = 0; i < db.sbi.length; i++) {
+    var f = db.sbi[i], col = cc(f.region);
+    rows.push({id:f.id, icon:RICONS[f.region]||'🌐', iconBg:col+'22', name:f.name, badge:f.region, badgeColor:col, val:f.value, gain:f.gain, pct:f.pct});
+  }
+  renderItemList('list-sbi', rows, 'editSBI');
+}
+
+function renderAll() {
+  renderHeader();
+  renderHome();
+  renderCombined();
+  renderAlloc();
+  renderFunds();
+  renderSBI();
+}
+
+// ─── NAVIGATION ──────────────────────────
+var currentPanel = 'home';
+function showPanel(name) {
+  var panels = document.querySelectorAll('.panel');
+  for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+  var navs = document.querySelectorAll('.nav-btn');
+  for (var i = 0; i < navs.length; i++) navs[i].classList.remove('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  currentPanel = name;
+}
+
+// ─── SHEET MODAL ─────────────────────────
+var sheetType = null, sheetId = null;
+
+function openSheet(type, id) {
+  sheetType = type || (currentPanel === 'sbi' ? 'sbi' : currentPanel === 'funds' ? 'fund' : currentPanel === 'alloc' ? 'alloc' : 'fund');
+  sheetId = id || null;
+  document.getElementById('sheet-title').textContent = id ? '編集' : 'データを追加';
+  buildForm();
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
+function onBgClick(e) { if (e.target === document.getElementById('overlay')) closeSheet(); }
+function switchType(t) { sheetType = t; sheetId = null; buildForm(); }
+
+function makeOption(val, selected) {
+  return '<option value="' + val + '"' + (selected ? ' selected' : '') + '>' + val + '</option>';
+}
+
+function buildForm() {
+  var t = sheetType;
+  var body = document.getElementById('sheet-body');
+
+  var tabs = '';
+  if (!sheetId) {
+    tabs = '<div class="type-tabs">'
+      + '<div class="type-tab' + (t==='alloc'?' active':'') + '" onclick="switchType(\'alloc\')">💰 資産</div>'
+      + '<div class="type-tab' + (t==='fund'?' active':'') + '" onclick="switchType(\'fund\')">📈 楽天</div>'
+      + '<div class="type-tab' + (t==='sbi'?' active':'') + '" onclick="switchType(\'sbi\')">🏦 SBI</div>'
+      + '</div>';
+  }
+
+  var fields = '';
+  if (t === 'alloc') {
+    var item = sheetId ? null : null;
+    for (var i = 0; i < db.allocation.length; i++) { if (db.allocation[i].id === sheetId) { item = db.allocation[i]; break; } }
+    var cats = ['証券口座','現金','持株','暗号資産','その他'];
+    var opts = '';
+    for (var i = 0; i < cats.length; i++) opts += makeOption(cats[i], item && item.cat === cats[i]);
+    fields = '<input type="hidden" id="sf-type" value="alloc">'
+      + '<div class="form-group"><label class="form-label">名称</label><input class="form-input" id="sf-name" value="' + (item?item.name:'') + '"></div>'
+      + '<div class="form-group"><label class="form-label">カテゴリ</label><select class="form-select" id="sf-cat">' + opts + '</select></div>'
+      + '<div class="form-group"><label class="form-label">金額（円）</label><input class="form-input" id="sf-value" type="number" value="' + (item?item.value:'') + '"></div>'
+      + (item ? '<button class="del-btn" onclick="deleteItem(\'alloc\',' + item.id + ')">🗑 削除</button>' : '');
+  } else {
+    var src = (t === 'sbi') ? db.sbi : db.funds;
+    var item = null;
+    for (var i = 0; i < src.length; i++) { if (src[i].id === sheetId) { item = src[i]; break; } }
+    var regs = ['米国','全世界','日本','新興国','貴金属','欧州','現金','その他'];
+    var opts = '';
+    for (var i = 0; i < regs.length; i++) opts += makeOption(regs[i], item && item.region === regs[i]);
+    fields = '<input type="hidden" id="sf-type" value="' + t + '">'
+      + '<div class="form-group"><label class="form-label">銘柄名</label><input class="form-input" id="sf-name" value="' + (item?item.name:'') + '"></div>'
+      + '<div class="form-group"><label class="form-label">地域</label><select class="form-select" id="sf-region">' + opts + '</select></div>'
+      + '<div class="form-row">'
+        + '<div class="form-group"><label class="form-label">評価額（円）</label><input class="form-input" id="sf-value" type="number" value="' + (item?item.value:'') + '"></div>'
+        + '<div class="form-group"><label class="form-label">損益（円）</label><input class="form-input" id="sf-gain" type="number" value="' + (item?item.gain:'') + '"></div>'
+      + '</div>'
+      + '<div class="form-group"><label class="form-label">損益率（%）</label><input class="form-input" id="sf-pct" type="number" step="0.01" value="' + (item?item.pct:'') + '"></div>'
+      + (item ? '<button class="del-btn" onclick="deleteItem(\'' + t + '\',' + item.id + ')">🗑 削除</button>' : '');
+  }
+  body.innerHTML = tabs + fields;
+}
+
+function gv(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function gn(id) { var v = gv(id); return (v !== '') ? parseFloat(v) : 0; }
+
+function saveItem() {
+  var t = gv('sf-type');
+  if (t === 'alloc') {
+    var item = {id: sheetId || db.nextId.a++, name:gv('sf-name'), cat:gv('sf-cat'), value:gn('sf-value')};
+    if (sheetId) { for (var i=0;i<db.allocation.length;i++) { if(db.allocation[i].id===sheetId){db.allocation[i]=item;break;} } }
+    else db.allocation.push(item);
+  } else if (t === 'fund') {
+    var item = {id:sheetId||db.nextId.f++, name:gv('sf-name'), region:gv('sf-region'), value:gn('sf-value'), gain:gn('sf-gain'), pct:gn('sf-pct')};
+    if (sheetId) { for (var i=0;i<db.funds.length;i++) { if(db.funds[i].id===sheetId){db.funds[i]=item;break;} } }
+    else db.funds.push(item);
+  } else if (t === 'sbi') {
+    var item = {id:sheetId||db.nextId.s++, name:gv('sf-name'), region:gv('sf-region'), value:gn('sf-value'), gain:gn('sf-gain'), pct:gn('sf-pct')};
+    if (sheetId) { for (var i=0;i<db.sbi.length;i++) { if(db.sbi[i].id===sheetId){db.sbi[i]=item;break;} } }
+    else db.sbi.push(item);
+  }
+  saveDB(); closeSheet(); renderAll();
+}
+
+function deleteItem(t, id) {
+  if (!confirm('削除しますか？')) return;
+  if (t === 'alloc') db.allocation = db.allocation.filter(function(a){return a.id!==id;});
+  else if (t === 'fund') db.funds = db.funds.filter(function(f){return f.id!==id;});
+  else if (t === 'sbi')  db.sbi   = db.sbi.filter(function(f){return f.id!==id;});
+  saveDB(); closeSheet(); renderAll();
+}
+
+function editAlloc(id) { openSheet('alloc', id); }
+function editFund(id)  { openSheet('fund',  id); }
+function editSBI(id)   { openSheet('sbi',   id); }
+
+// ─── INIT ────────────────────────────────
+loadDB();
+renderAll();
+</script>
+</body>
+</html>
+
 :root{--bg:#f0f2f7;--card:#fff;--card2:#f8f9fc;--border:#e4e7f0;--text:#0f1320;--sub:#6b7280;--accent:#2563eb;--green:#059669;--red:#dc2626;--gold:#d97706;--shadow:0 2px 16px rgba(15,19,32,.08);--r:20px;--rs:12px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overscroll-behavior:none}
